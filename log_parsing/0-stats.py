@@ -1,53 +1,56 @@
 #!/usr/bin/python3
 """
-Continuously reads input lines and processes them to compute metrics.
+script that reads stdin line by line and computes metrics
 """
 import sys
+import signal
 
+# Initialize global variables
 total_file_size = 0
+status_code_counts = {
+    "200": 0,
+    "301": 0,
+    "400": 0,
+    "401": 0,
+    "403": 0,
+    "404": 0,
+    "405": 0,
+    "500": 0,
+}
 line_count = 0
-valid_status_codes = ['200', '301', '400', '401', '403', '404', '405', '500']
-status_code_count = {code: 0 for code in valid_status_codes}
-has_printed_final = False
 
 
-def print_metrics():
+def print_statistics():
     """
-    Prints the computed metrics to stdout.
+    Prints the current statistics.
     """
-    print(f"File size: {total_file_size}")
-    for status_code in sorted(valid_status_codes):
-        if status_code_count[status_code] > 0:
-            print(f"{status_code}: {status_code_count[status_code]}")
+    print("File size: {}".format(total_file_size))
+    for code in sorted(status_code_counts.keys()):
+        if status_code_counts[code] > 0:
+            print("{}: {}".format(code, status_code_counts[code]))
 
 
-if __name__ == "__main__":
-    try:
-        has_printed_final = False
+def signal_handler(sig, frame):
+    """
+    Prints the stats obtained from the file when a keyboard interrupt occurs.
+    """
+    print_statistics()
 
-        for line in sys.stdin:
-            words = line.split()
 
-            if len(words) >= 2:
-                status_code = words[-2]
-                try:
-                    file_size = int(words[-1])
-                    total_file_size += file_size
-                except ValueError:
-                    continue
-
-                if status_code in status_code_count:
-                    status_code_count[status_code] += 1
-
-                line_count += 1
-
-                if line_count % 10 == 0:
-                    print_metrics()
-                    has_printed_final = True
-
-        if not has_printed_final or line_count % 10 != 0:
-            print_metrics()
-
-    except KeyboardInterrupt:
-        print_metrics()
-        raise
+# Register the signal handler for SIGINT
+signal.signal(signal.SIGINT, signal_handler)
+try:
+    for line in sys.stdin:
+        line_count += 1
+        line_parsed = line.split()
+        length_line = len(line_parsed)
+        if length_line < 2:
+            continue
+        total_file_size += int(line_parsed[length_line - 1])
+        if line_parsed[length_line - 2] not in status_code_counts.keys():
+            continue
+        status_code_counts[line_parsed[length_line - 2]] += 1
+        if line_count % 10 == 0:
+            print_statistics()
+finally:
+    print_statistics()
