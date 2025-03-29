@@ -1,62 +1,47 @@
 #!/usr/bin/python3
-""" N queens backtracking """
 import sys
 
 
-class NQueen:
-    """ Class Queens """
-
-    def __init__(self, n):
-        """ Constructor """
-        self.n = n
-        self.x = [0 for i in range(n + 1)]
-        self.res = []
-
-    def place(self, k, i):
-        """ Check if a secure place
-        """
-
-        for j in range(1, k):
-            if self.x[j] == i or \
-               abs(self.x[j] - i) == abs(j - k):
-                return 0
-        return 1
-
-    def nQueen(self, k):
-        """ Resolve the nqueen
-        """
-        for i in range(1, self.n + 1):
-            if self.place(k, i):
-                self.x[k] = i
-                if k == self.n:
-                    solution = []
-                    for i in range(1, self.n + 1):
-                        solution.append([i - 1, self.x[i] - 1])
-                    self.res.append(solution)
-                else:
-                    self.nQueen(k + 1)
-        return self.res
+def is_safe(board, row, col, N):
+    """ Vérifie si une reine peut être placée à board[row][col] """
+    for i in range(row):
+        if board[i] == col or \
+           board[i] - i == col - row or \
+           board[i] + i == col + row:
+            return False
+    return True
 
 
-if len(sys.argv) != 2:
-    print("Usage: nqueens N")
-    sys.exit(1)
+def solve_nqueens(N, row=0, board=[]):
+    """ Utilise le backtracking pour trouver toutes les solutions """
+    if row == N:
+        print([[i, board[i]] for i in range(N)])  # Format de sortie attendu
+        return
 
-N = sys.argv[1]
+    for col in range(N):
+        if is_safe(board, row, col, N):
+            solve_nqueens(N, row + 1, board + [col])
 
-try:
-    N = int(N)
-except ValueError:
-    print("N must be a number")
-    sys.exit(1)
 
-if N < 4:
-    print("N must be at least 4")
-    sys.exit(1)
+def main():
+    """ Vérifie les arguments et lance la résolution """
+    if len(sys.argv) != 2:
+        print("Usage: nqueens N")
+        sys.exit(1)
 
-queen = NQueen(N)
-result = queen.nQueen(1)
+    try:
+        N = int(sys.argv[1])
+    except ValueError:
+        print("N must be a number")
+        sys.exit(1)
 
-for i in result:
-    print(i)
+    if N < 4:
+        print("N must be at least 4")
+        sys.exit(1)
+
+    solve_nqueens(N)
+
+
+if __name__ == "__main__":
+    main()
     
