@@ -59,3 +59,4 @@ result = queen.nQueen(1)
 
 for i in result:
     print(i)
+    
